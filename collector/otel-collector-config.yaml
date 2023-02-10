@@ -1,0 +1,64 @@
+receivers:
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      process:
+        metrics:
+          process.memory.physical_usage:
+            enabled: false
+          process.memory.virtual_usage:
+            enabled: false
+          process.memory.usage:
+            enabled: true
+          process.memory.virtual:
+            enabled: true
+  
+  hostmetrics/disk:
+    root_path: /hostfs
+    collection_interval: 1m
+    scrapers:
+      disk:
+      filesystem:
+
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 50
+    spike_limit_percentage: 30
+
+exporters:
+
+  prometheus:
+    endpoint: 0.0.0.0:9000
+    send_timestamps: true
+    metric_expiration: 180m
+    enable_open_metrics: true
+    resource_to_telemetry_conversion:
+      enabled: true
+    const_labels:
+      label1: value1
+
+  # prometheusremotewrite:
+  #   endpoint: "http://some.url:9411/api/prom/push"
+
+extensions:
+  zpages: # https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/zpagesextension/README.md
+
+  # memory_ballast: # reduces GC - see https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/
+  #   size_mib: 64
+
+service:
+  extensions: [zpages]
+  pipelines:
+    metrics:
+      receivers: [hostmetrics, hostmetrics/disk, otlp]
+      processors: [batch, memory_limiter]
+      exporters: [prometheus]
