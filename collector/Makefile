@@ -11,7 +11,7 @@ server.key server.crt:
 		-nodes
 
 .PHONY: start
-start: 
+start:  certs
 	docker-compose up -d
 
 .PHONY: stop

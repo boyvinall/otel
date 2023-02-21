@@ -1,12 +1,14 @@
 receivers:
   hostmetrics:
-    collection_interval: 30s
+    collection_interval: 5s
     scrapers:
       memory:
+      network:
+      cpu:
+      disk:
 
-      # not currently supported on macOS:
-      # cpu:
       # process:
+      # not currently supported on macOS:
       #   metrics:
       #     process.memory.physical_usage:
       #       enabled: false
@@ -19,9 +21,8 @@ receivers:
 
   hostmetrics/disk:
     root_path: /
-    collection_interval: 2m
+    collection_interval: 30s
     scrapers:
-      # disk:
       filesystem:
         include_mount_points:
           match_type: strict
@@ -39,6 +40,11 @@ processors:
     check_interval: 1s
     limit_percentage: 50
     spike_limit_percentage: 30
+  attributes/example:
+    actions:
+      - key: vm.job.id
+        value: qux-yuiy3-3y8793
+        action: upsert
 
 exporters:
 
@@ -49,8 +55,6 @@ exporters:
     tls:
       insecure: false
       insecure_skip_verify: true
-    # const_labels:
-    #   label1: value1
 
 extensions:
   zpages: # https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/zpagesextension/README.md
@@ -72,5 +76,5 @@ service:
   pipelines:
     metrics:
       receivers: [hostmetrics, hostmetrics/disk]
-      processors: [batch, memory_limiter]
+      processors: [batch, memory_limiter, attributes/example]
       exporters: [otlp]

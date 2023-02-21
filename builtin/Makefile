@@ -7,5 +7,8 @@ all: build
 #   -w    disable DWARF generation
 
 build:
-	CGO_ENABLED=0 go build -ldflags="-s -w"
-	# upx --best --lzma builtin
+	go build
+
+.PHONY: run
+run: build
+	./builtin
