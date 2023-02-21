@@ -1,31 +1,18 @@
 receivers:
-  hostmetrics:
-    collection_interval: 30s
-    scrapers:
-      cpu:
-      memory:
-      process:
-        metrics:
-          process.memory.physical_usage:
-            enabled: false
-          process.memory.virtual_usage:
-            enabled: false
-          process.memory.usage:
-            enabled: true
-          process.memory.virtual:
-            enabled: true
-  
-  hostmetrics/disk:
-    root_path: /hostfs
-    collection_interval: 1m
-    scrapers:
-      disk:
-      filesystem:
-
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
+        tls:
+          cert_file: /server.crt
+          key_file: /server.key
+          # insecure: true
+        auth:
+          authenticator: basicauth/server
       http:
+        endpoint: 0.0.0.0:4318
+        auth:
+          authenticator: basicauth/server
 
 processors:
   batch:
@@ -43,8 +30,6 @@ exporters:
     enable_open_metrics: true
     resource_to_telemetry_conversion:
       enabled: true
-    const_labels:
-      label1: value1
 
   # prometheusremotewrite:
   #   endpoint: "http://some.url:9411/api/prom/push"
@@ -55,10 +40,16 @@ extensions:
   # memory_ballast: # reduces GC - see https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/
   #   size_mib: 64
 
+  basicauth/server:
+    htpasswd: 
+      # file: .htpasswd
+      inline: |
+        username:password
+
 service:
-  extensions: [zpages]
+  extensions: [zpages, basicauth/server]
   pipelines:
     metrics:
-      receivers: [hostmetrics, hostmetrics/disk, otlp]
+      receivers: [otlp]
       processors: [batch, memory_limiter]
       exporters: [prometheus]

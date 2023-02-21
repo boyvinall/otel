@@ -1,9 +1,11 @@
 receivers:
   hostmetrics:
-    collection_interval: 5s
+    collection_interval: 30s
     scrapers:
-      cpu:
       memory:
+
+      # not currently supported on macOS:
+      # cpu:
       # process:
       #   metrics:
       #     process.memory.physical_usage:
@@ -15,17 +17,21 @@ receivers:
       #     process.memory.virtual:
       #       enabled: true
 
-  # hostmetrics/disk:
-  #   root_path: /hostfs
-  #   collection_interval: 1m
-  #   scrapers:
-  #     disk:
-  #     filesystem:
+  hostmetrics/disk:
+    root_path: /
+    collection_interval: 2m
+    scrapers:
+      # disk:
+      filesystem:
+        include_mount_points:
+          match_type: strict
+          mount_points:
+            - /
 
-  otlp:
-    protocols:
-      grpc:
-      http:
+  # otlp:
+  #   protocols:
+  #     grpc:
+  #     http:
 
 processors:
   batch:
@@ -36,18 +42,15 @@ processors:
 
 exporters:
 
-  prometheus:
-    endpoint: 0.0.0.0:9000
-    send_timestamps: true
-    metric_expiration: 180m
-    enable_open_metrics: true
-    resource_to_telemetry_conversion:
-      enabled: true
-    const_labels:
-      label1: value1
-
-  # prometheusremotewrite:
-  #   endpoint: "http://some.url:9411/api/prom/push"
+  otlp:
+    endpoint: 127.0.0.1:4317
+    auth:
+      authenticator: basicauth/client
+    tls:
+      insecure: false
+      insecure_skip_verify: true
+    # const_labels:
+    #   label1: value1
 
 extensions:
   zpages: # https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/zpagesextension/README.md
@@ -55,11 +58,19 @@ extensions:
   # memory_ballast: # reduces GC - see https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/
   #   size_mib: 64
 
+  basicauth/client:
+    client_auth: 
+      username: username
+      password: password
+
 service:
-  extensions: [zpages]
+  extensions: [zpages, basicauth/client]
+  telemetry:
+    metrics:
+      # address: 0.0.0.0:8888
+      level: none
   pipelines:
     metrics:
-      # receivers: [hostmetrics, hostmetrics/disk, otlp]
-      receivers: [hostmetrics, otlp]
+      receivers: [hostmetrics, hostmetrics/disk]
       processors: [batch, memory_limiter]
-      exporters: [prometheus]
+      exporters: [otlp]

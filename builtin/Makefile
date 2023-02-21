@@ -1,6 +1,11 @@
 .PHONY: all build
 all: build
 
+# $ go tool link
+#   ...
+#   -s    disable symbol table
+#   -w    disable DWARF generation
+
 build:
-	go build -ldflags="-s -w"
+	CGO_ENABLED=0 go build -ldflags="-s -w"
 	# upx --best --lzma builtin

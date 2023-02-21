@@ -1,15 +1,13 @@
 package main
 
 import (
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/bearertokenauthextension"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/connector"
 	"go.opentelemetry.io/collector/connector/forwardconnector"
 	"go.opentelemetry.io/collector/exporter"
-
-	// "go.opentelemetry.io/collector/exporter/loggingexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
-	// "go.opentelemetry.io/collector/exporter/otlphttpexporter"
 	"go.opentelemetry.io/collector/extension"
 	"go.opentelemetry.io/collector/extension/ballastextension"
 	"go.opentelemetry.io/collector/extension/zpagesextension"
@@ -19,6 +17,9 @@ import (
 	"go.opentelemetry.io/collector/processor/memorylimiterprocessor"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/otlpreceiver"
+	// "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter"
+	// "go.opentelemetry.io/collector/exporter/otlphttpexporter"
+	// "go.opentelemetry.io/collector/exporter/loggingexporter"
 )
 
 func components() (otelcol.Factories, error) {
@@ -28,6 +29,8 @@ func components() (otelcol.Factories, error) {
 	factories.Extensions, err = extension.MakeFactoryMap(
 		ballastextension.NewFactory(),
 		zpagesextension.NewFactory(),
+		bearertokenauthextension.NewFactory(),
+		basicauthextension.NewFactory(),
 	)
 	if err != nil {
 		return otelcol.Factories{}, err
@@ -45,7 +48,7 @@ func components() (otelcol.Factories, error) {
 		// loggingexporter.NewFactory(),
 		otlpexporter.NewFactory(),
 		// otlphttpexporter.NewFactory(),
-		prometheusexporter.NewFactory(),
+		// prometheusexporter.NewFactory(),
 	)
 	if err != nil {
 		return otelcol.Factories{}, err

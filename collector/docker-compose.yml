@@ -4,13 +4,15 @@ services:
 
   # Collector
   otel-collector:
-    image: otel/opentelemetry-collector
+    image: otel/opentelemetry-collector-contrib
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./server.crt:/server.crt
+      - ./server.key:/server.key
       - /:/hostfs
     ports:
-      - "1888:1888"   # pprof extension
+      # - "1888:1888"   # pprof extension
       - "8888:8888"   # Prometheus metrics exposed by the collector
       - "9000:9000"   # Prometheus exporter metrics
       - "13133:13133" # health_check extension
